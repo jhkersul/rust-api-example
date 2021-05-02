@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  rust_api_example:
+    image: rust-api-example
+    build:
+      context: .
+      dockerfile: ./Dockerfile
