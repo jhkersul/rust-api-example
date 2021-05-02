@@ -1,7 +1,6 @@
-use super::request::CreateUserRequest;
-use super::domain::User;
-use super::repo::save_user;
+use rocket::State;
 use rocket_contrib::json::Json;
+use super::{db::Database, request::CreateUserRequest};
 
 #[get("/users")]
 pub fn get_users() -> &'static str {
@@ -9,9 +8,9 @@ pub fn get_users() -> &'static str {
 }
 
 #[post("/users", format = "application/json", data = "<create_user_request>")]
-pub fn create_user(create_user_request: Json<CreateUserRequest>) -> String {
+pub async fn create_user(create_user_request: Json<CreateUserRequest>, db: State<'_, Database>) -> String {
     let user = create_user_request.to_domain();
-    let saved_user: User = save_user(user);
+    let saved_user = db.save_user(user).await;
 
     format!(
         "{} {} {}",
@@ -24,23 +23,22 @@ pub fn create_user(create_user_request: Json<CreateUserRequest>) -> String {
 #[cfg(test)]
 mod test {
     use super::super::super::rocket;
-    use rocket::local::Client;
-    use rocket::http::ContentType;
+    use rocket::{http::ContentType, local::asynchronous::Client};
     use rocket::http::Status;
 
-    #[test]
-    fn should_get_users() {
-        let client = Client::new(rocket()).expect("valid rocket instance");
+    #[rocket::async_test]
+    async fn should_get_users() {
+        let client = Client::tracked(rocket().await).await.unwrap();
 
-        let mut response = client.get("/users").dispatch();
+        let response = client.get("/users").dispatch().await;
 
         assert_eq!(response.status(), Status::Ok);
-        assert_eq!(response.body_string(), Some("World!".to_string()));
+        assert_eq!(response.into_string().await.unwrap(), "World!".to_string());
     }
 
-    #[test]
-    fn should_create_hello() {
-        let client = Client::new(rocket()).expect("valid rocket instance");
+    #[rocket::async_test]
+    async fn should_create_hello() {
+        let client = Client::tracked(rocket().await).await.unwrap();
         let json_body = r#"
             {
                 "email": "test@test.com",
@@ -48,8 +46,8 @@ mod test {
                 "last_name": "Doe"
             }"#;
         
-        let mut response = client.post("/users").body(json_body).header(ContentType::JSON).dispatch();
+        let response = client.post("/users").body(json_body).header(ContentType::JSON).dispatch().await;
 
-        assert_eq!(response.body_string(), Some("test@test.com John Doe".to_string()));
+        assert_eq!(response.into_string().await.unwrap(), "test@test.com John Doe".to_string());
     }
 }

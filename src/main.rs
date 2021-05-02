@@ -4,14 +4,25 @@
 mod app;
 
 use app::routes as app_routes;
+use app::db::Database;
+use rocket::Rocket;
+use rocket::Build;
 
-fn main() {
-    rocket().launch();
+#[rocket::main] 
+async fn main() {
+    match rocket().await.launch().await {
+        Ok(_) => {()}
+        Err(_) => {()}
+    };
 }
 
-fn rocket() -> rocket::Rocket {
-    rocket::ignite().mount(
-        "/",
-        routes![app_routes::get_users, app_routes::create_user]
-    )
+async fn rocket() -> Rocket<Build> {
+    let db = Database::init().await;
+
+    return rocket::build()
+            .mount(
+                "/",
+                routes![app_routes::get_users, app_routes::create_user]
+            )
+            .manage(db)
 }
