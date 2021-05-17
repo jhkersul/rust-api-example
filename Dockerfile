@@ -1,4 +1,8 @@
-FROM docker/whalesay:latest
-LABEL Name=rust_api_example
-RUN apt-get -y update && apt-get install -y fortunes
-CMD ["sh", "-c", "/usr/games/fortune -a | cowsay"]
+FROM rustlang/rust:nightly as builder
+WORKDIR /usr/src/rust-api-example
+COPY . .
+RUN cargo install --path .
+
+FROM debian:buster-slim
+COPY --from=builder /usr/local/cargo/bin/rust-api-example /usr/local/bin/rust-api-example
+CMD ["rust-api-example"]

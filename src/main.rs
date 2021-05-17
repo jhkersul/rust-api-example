@@ -22,7 +22,7 @@ async fn rocket() -> Rocket<Build> {
     return rocket::build()
             .mount(
                 "/",
-                routes![app_routes::get_users, app_routes::create_user]
+                routes![app_routes::get_user, app_routes::create_user]
             )
             .manage(db)
 }
