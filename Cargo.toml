@@ -1,7 +1,7 @@
 [package]
 name = "rust-api-example"
 version = "0.1.0"
-authors = ["Kersul <joao.faria@creditas.com>"]
+authors = ["Kersul <joaohkfaria@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
