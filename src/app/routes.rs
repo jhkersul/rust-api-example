@@ -1,10 +1,10 @@
 use mongodb::bson::oid::ObjectId;
 use rocket::State;
-use rocket_contrib::json::Json;
+use rocket::serde::json::Json;
 use super::{db::Database, request::CreateUserRequest, response::{CreateUserResponse, GetUserResponse}};
 
 #[get("/users/<id>")]
-pub async fn get_user(id: String, db: State<'_, Database>) -> Json<GetUserResponse> {
+pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse> {
     let object_id = ObjectId::with_string(&id).unwrap();
 
     return match db.get_user(object_id).await {
@@ -17,7 +17,7 @@ pub async fn get_user(id: String, db: State<'_, Database>) -> Json<GetUserRespon
 #[post("/users", format = "application/json", data = "<create_user_request>")]
 pub async fn create_user(
     create_user_request: Json<CreateUserRequest>,
-    db: State<'_, Database>
+    db: &State<Database>
 ) -> Json<CreateUserResponse> {
     let user = create_user_request.to_domain();
     let user_id = db.save_user(&user).await;
