@@ -27,6 +27,11 @@ pub async fn create_user(
     })
 }
 
+#[get("/health", format = "text/html")]
+pub async fn health_check() -> String {
+    format!("Health OK")
+}
+
 #[cfg(test)]
 mod test {
     use crate::app::{db::Database, domain::User, response::{CreateUserResponse, GetUserResponse}};
@@ -71,5 +76,18 @@ mod test {
         let create_user_response: CreateUserResponse = serde_json::from_str(response_json.as_str()).unwrap();
 
         assert_eq!(create_user_response.id.len() > 0, true);
+    }
+
+    #[rocket::async_test]
+    async fn should_health_check() {
+        let client = Client::tracked(rocket().await).await.unwrap();
+
+        let response = client
+            .get("/health")
+            .header(ContentType::Text)
+            .dispatch().await;
+        let response_string = response.into_string().await.unwrap();
+
+        assert_eq!(response_string, "Health OK")
     }
 }

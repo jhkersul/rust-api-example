@@ -5,6 +5,14 @@
 This is a simple example of a Rust API using Rocket and MongoDB.
 The purpose is to have an sample of how to build a Web API in Rust.
 
+## Endpoints
+
+| Method |    Path    |               Content               |
+| ------ | ---------- | ----------------------------------- |
+| GET    | /health    | ----------------------------------- |
+| POST   | /users     | JSON - email, first_name, last_name |
+| GET    | /users/:id | ----------------------------------- |
+
 ## How to Run
 
 ### Using Docker
