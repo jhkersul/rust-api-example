@@ -29,7 +29,7 @@ pub async fn create_user(
 
 #[get("/health", format = "text/html")]
 pub async fn health_check() -> String {
-    format!("Health OK")
+    "Health OK".to_string()
 }
 
 #[cfg(test)]

@@ -10,7 +10,7 @@ pub struct CreateUserRequest {
 
 impl CreateUserRequest {
   pub fn to_domain(&self) -> User {
-    return User {
+    User {
       _id: None,
       email: self.email.clone(),
       first_name: self.first_name.clone(),

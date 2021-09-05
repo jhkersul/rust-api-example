@@ -5,7 +5,7 @@ use super::super::domain::User;
 
 
 fn get_id(result: &InsertOneResult) -> ObjectId {
-  return match result.inserted_id.as_object_id() {
+  match result.inserted_id.as_object_id() {
       Some(object_id) => object_id.clone(),
       None => panic!("No id was returned")
   }
@@ -22,7 +22,7 @@ fn deserialize_user(user: &User) -> Document {
   let mut result = bson::to_document(user).unwrap();
   result.remove("_id");
 
-  return result;
+  result
 }
 
 impl Database {
@@ -35,7 +35,7 @@ impl Database {
           Err(error) => panic!("{}", error)
       };
 
-    return id;
+    id
   }
 
   pub async fn get_user(&self, id: ObjectId) -> Option<User> {

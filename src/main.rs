@@ -10,16 +10,13 @@ use rocket::Build;
 
 #[rocket::main] 
 async fn main() {
-    match rocket().await.launch().await {
-        Ok(_) => {()}
-        Err(_) => {()}
-    };
+    rocket().await.launch().await.unwrap()
 }
 
 async fn rocket() -> Rocket<Build> {
     let db = Database::init().await;
 
-    return rocket::build()
+    rocket::build()
             .mount(
                 "/",
                 routes![
