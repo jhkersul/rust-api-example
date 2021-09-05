@@ -4,6 +4,10 @@ jobs:
   build:
     docker:
       - image: cimg/rust:1.54.0
+      - image: mongo:latest
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root
     steps:
       - checkout
       - run:
