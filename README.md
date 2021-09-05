@@ -1,4 +1,5 @@
 # Rust API Example
+[![CircleCI](https://circleci.com/gh/jhkersul/rust-api-example/tree/main.svg?style=svg)](https://circleci.com/gh/jhkersul/rust-api-example/tree/main)
 
 <img src="docs/images/ferris.png" width=250>
 
