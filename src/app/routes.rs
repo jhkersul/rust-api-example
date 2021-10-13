@@ -2,6 +2,7 @@ use mongodb::bson::oid::ObjectId;
 use rocket::State;
 use rocket::serde::json::Json;
 use super::{db::Database, request::CreateUserRequest, response::{CreateUserResponse, GetUserResponse}};
+use rocket_dyn_templates::Template;
 
 #[get("/users/<id>")]
 pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse> {
@@ -31,6 +32,12 @@ pub async fn create_user(
 pub async fn health_check() -> String {
     "Health OK".to_string()
 }
+
+#[get("/")]
+pub async fn root() -> Template {
+    Template::render("index", {})
+}
+
 
 #[cfg(test)]
 mod test {
@@ -90,5 +97,18 @@ mod test {
         let response_string = response.into_string().await.unwrap();
 
         assert_eq!(response_string, "Health OK")
+    }
+
+    #[rocket::async_test]
+    async fn should_check_root_route() {
+        let client = Client::tracked(rocket().await).await.unwrap();
+
+        let response = client
+            .get("/")
+            .header(ContentType::Text)
+            .dispatch().await;
+        let response_string = response.into_string().await.unwrap();
+
+        assert_eq!(response_string, "<h1>Welcome to Rust API Example</h1>")
     }
 }
