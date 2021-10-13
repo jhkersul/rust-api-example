@@ -35,7 +35,7 @@ pub async fn health_check() -> String {
 
 #[get("/")]
 pub async fn root() -> Template {
-    Template::render("index", {})
+    Template::render("index", ())
 }
 
 

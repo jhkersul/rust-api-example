@@ -5,16 +5,8 @@ use super::super::domain::User;
 
 fn get_id(result: &InsertOneResult) -> ObjectId {
   match result.inserted_id.as_object_id() {
-      Some(object_id) => object_id.clone(),
+      Some(object_id) => object_id,
       None => panic!("No id was returned")
-  }
-}
-
-fn deserialize_user(optional_user: &Option<User>) -> Option<User> {
-  return if let Some(user) = optional_user {
-    Some(user.clone())
-  } else {
-    None
   }
 }
 
@@ -35,7 +27,7 @@ impl Database {
     let filter = doc! { "_id": id };
 
     match &self.users_collection().find_one(filter, None).await {
-        Ok(user) => deserialize_user(user),
+        Ok(user) => self.remove_ref_user(user),
         Err(error) => panic!("{}", error)
     }
   }

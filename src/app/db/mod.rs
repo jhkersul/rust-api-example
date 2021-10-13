@@ -33,4 +33,9 @@ impl Database {
   fn database(&self) -> MongoDatabase {
     self.client.database(DATABASE_NAME)
   }
+
+  fn remove_ref_user(&self, user: &Option<User>) -> Option<User> {
+    user.as_ref().map(|u| u.clone())
+  }
 }
+
