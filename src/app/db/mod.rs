@@ -4,6 +4,7 @@ use mongodb::{
   Database as MongoDatabase,
   Collection
 };
+use super::domain::User;
 
 const DATABASE_URL: &str = "mongodb://root:root@localhost:27017";
 const APP_NAME: &str = "rust-api-example";
@@ -25,7 +26,7 @@ impl Database {
     }
   }
 
-  pub fn users_collection(&self) -> Collection {
+  pub fn users_collection(&self) -> Collection<User> {
     self.database().collection("users")
   }
 

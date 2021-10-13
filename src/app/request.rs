@@ -1,3 +1,4 @@
+use mongodb::bson::oid::ObjectId;
 use serde::Deserialize;
 use super::domain::User;
 
@@ -11,7 +12,7 @@ pub struct CreateUserRequest {
 impl CreateUserRequest {
   pub fn to_domain(&self) -> User {
     User {
-      _id: None,
+      _id: ObjectId::new(),
       email: self.email.clone(),
       first_name: self.first_name.clone(),
       last_name: self.last_name.clone()

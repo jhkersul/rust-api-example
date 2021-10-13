@@ -5,7 +5,7 @@ use super::{db::Database, request::CreateUserRequest, response::{CreateUserRespo
 
 #[get("/users/<id>")]
 pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse> {
-    let object_id = ObjectId::with_string(&id).unwrap();
+    let object_id = ObjectId::parse_str(&id).unwrap();
 
     return match db.get_user(object_id).await {
         Some(user) => Json(GetUserResponse::from_domain(&user)),
@@ -34,6 +34,7 @@ pub async fn health_check() -> String {
 
 #[cfg(test)]
 mod test {
+    use mongodb::bson::oid::ObjectId;
     use crate::app::{db::Database, domain::User, response::{CreateUserResponse, GetUserResponse}};
     use super::super::super::rocket;
     use rocket::{http::ContentType, local::asynchronous::Client};
@@ -43,21 +44,21 @@ mod test {
     async fn should_get_user() {
         let db = Database::init().await;
         let user = User {
-            _id: None,
+            _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
             last_name: "Doe".to_string()
         };
-        let saved_user_id = db.save_user(&user).await;
+        db.save_user(&user).await;
         let client = Client::tracked(rocket().await).await.unwrap();
-        let path = format!("/users/{}", saved_user_id.to_string());
+        let path = format!("/users/{}", user._id.to_string());
 
         let response = client.get(path).dispatch().await;
 
         assert_eq!(response.status(), Status::Ok);
         let response_json = response.into_string().await.unwrap();
         let get_user_response: GetUserResponse = serde_json::from_str(response_json.as_str()).unwrap();
-        assert_eq!(get_user_response.id, saved_user_id.to_string());
+        assert_eq!(get_user_response.id, user._id.to_string());
         assert_eq!(get_user_response.email, user.email);
     }
 

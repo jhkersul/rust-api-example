@@ -17,7 +17,7 @@ pub struct GetUserResponse {
 impl GetUserResponse {
   pub fn from_domain(user: &User) -> GetUserResponse {
     GetUserResponse {
-      id: user._id.clone().unwrap().to_string(),
+      id: user._id.clone().to_string(),
       email: user.email.clone(),
       first_name: user.first_name.clone(),
       last_name: user.last_name.clone(),
