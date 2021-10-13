@@ -8,11 +8,12 @@ The purpose is to have an sample of how to build a Web API in Rust.
 
 ## Endpoints
 
-| Method |    Path    |               Content               |
-| ------ | ---------- | ----------------------------------- |
-| GET    | /health    | ----------------------------------- |
-| POST   | /users     | JSON - email, first_name, last_name |
-| GET    | /users/:id | ----------------------------------- |
+| Method |    Path    |               Content                    |
+| ------ | ---------- | ---------------------------------------- |
+| GET    | /health    | ---------------------------------------- |
+| POST   | /users     | JSON - email, first_name, last_name      |
+| GET    | /users     | JSON - Vec<email, first_name, last_name> |
+| GET    | /users/:id | ---------------------------------------- |
 
 ## How to Run
 
