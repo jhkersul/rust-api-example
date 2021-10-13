@@ -15,6 +15,16 @@ pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse>
 
 }
 
+#[get("/users")]
+pub async fn get_users(db: &State<Database>) -> Json<Vec<GetUserResponse>> {
+    let users = db.get_users(10).await;
+    let response = users
+        .into_iter()
+        .map(|user| GetUserResponse::from_domain(&user))
+        .collect();
+    Json(response)
+}
+
 #[post("/users", format = "application/json", data = "<create_user_request>")]
 pub async fn create_user(
     create_user_request: Json<CreateUserRequest>,
@@ -67,6 +77,35 @@ mod test {
         let get_user_response: GetUserResponse = serde_json::from_str(response_json.as_str()).unwrap();
         assert_eq!(get_user_response.id, user._id.to_string());
         assert_eq!(get_user_response.email, user.email);
+    }
+
+    #[rocket::async_test]
+    async fn should_get_users() {
+        let db = Database::init().await;
+        let user1 = User {
+            _id: ObjectId::new(),
+            email: "test@test.com".to_string(),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string()
+        };
+        let user2 = User {
+            _id: ObjectId::new(),
+            email: "test@test.com".to_string(),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string()
+        };
+        db.save_user(&user1).await;
+        db.save_user(&user2).await;
+        let client = Client::tracked(rocket().await).await.unwrap();
+        let path = "/users";
+
+        let response = client.get(path).dispatch().await;
+
+        assert_eq!(response.status(), Status::Ok);
+        let response_json = response.into_string().await.unwrap();
+        let response: Vec<GetUserResponse> = serde_json::from_str(response_json.as_str()).unwrap();
+        assert!(response[0].id.len() > 0);
+        assert!(response[1].id.len() > 0);
     }
 
     #[rocket::async_test]

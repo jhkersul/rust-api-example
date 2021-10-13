@@ -23,6 +23,7 @@ async fn rocket() -> Rocket<Build> {
             "/",
             routes![
                 app_routes::get_user,
+                app_routes::get_users,
                 app_routes::create_user,
                 app_routes::health_check,
                 app_routes::root

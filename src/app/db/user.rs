@@ -1,4 +1,5 @@
-use mongodb::{bson::{doc, oid::ObjectId}, results::InsertOneResult};
+use mongodb::{bson::{doc, oid::ObjectId}, options::FindOptions, results::InsertOneResult};
+use rocket::futures::stream::TryStreamExt;
 use super::Database;
 use super::super::domain::User;
 
@@ -31,6 +32,14 @@ impl Database {
         Err(error) => panic!("{}", error)
     }
   }
+
+  pub async fn get_users(&self, limit: i64) -> Vec<User> {
+      let find_options = FindOptions::builder().limit(limit).build();
+      match self.users_collection().find(doc! {}, find_options).await {
+          Ok(cursor) => cursor.try_collect().await.unwrap_or_else(|_| vec![]),
+          Err(error) => panic!("{}", error)
+      }
+  }
 }
 
 #[cfg(test)]
@@ -62,3 +71,4 @@ mod test {
     }
   }
 }
+
