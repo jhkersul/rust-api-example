@@ -109,6 +109,6 @@ mod test {
             .dispatch().await;
         let response_string = response.into_string().await.unwrap();
 
-        assert_eq!(response_string, "<h1>Welcome to Rust API Example</h1>")
+        assert!(response_string.contains("<h1>Welcome to Rust API Example</h1>"))
     }
 }
