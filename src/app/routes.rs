@@ -1,30 +1,25 @@
-use mongodb::bson::oid::ObjectId;
-use rocket::State;
-use rocket::serde::json::Json;
 use super::{
     db::Database,
     request::CreateUserRequest,
-    response::{CreateUserResponse, GetUserResponse}
+    response::{CreateUserResponse, GetUserResponse},
 };
+use mongodb::bson::oid::ObjectId;
+use rocket::serde::json::Json;
+use rocket::State;
 use rocket_dyn_templates::Template;
 
 #[get("/users/<id>")]
-pub async fn get_user(
-    id: String, db: &State<Database>
-) -> Json<GetUserResponse> {
+pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse> {
     let object_id = ObjectId::parse_str(&id).unwrap();
 
     return match db.get_user(object_id).await {
         Some(user) => Json(GetUserResponse::from_domain(&user)),
-        None => panic!("User not found")
-    }
-
+        None => panic!("User not found"),
+    };
 }
 
 #[get("/users")]
-pub async fn get_users(
-    db: &State<Database>
-) -> Json<Vec<GetUserResponse>> {
+pub async fn get_users(db: &State<Database>) -> Json<Vec<GetUserResponse>> {
     let users = db.get_users(10).await;
     let response = users
         .into_iter()
@@ -33,14 +28,10 @@ pub async fn get_users(
     Json(response)
 }
 
-#[post(
-    "/users",
-    format = "application/json",
-    data = "<create_user_request>"
-)]
+#[post("/users", format = "application/json", data = "<create_user_request>")]
 pub async fn create_user(
     create_user_request: Json<CreateUserRequest>,
-    db: &State<Database>
+    db: &State<Database>,
 ) -> Json<CreateUserResponse> {
     let user = create_user_request.to_domain();
     let user_id = db.save_user(&user).await;
@@ -60,18 +51,17 @@ pub async fn root() -> Template {
     Template::render("index", ())
 }
 
-
 #[cfg(test)]
 mod test {
-    use mongodb::bson::oid::ObjectId;
+    use super::super::super::rocket;
     use crate::app::{
         db::Database,
         domain::User,
-        response::{CreateUserResponse, GetUserResponse}
+        response::{CreateUserResponse, GetUserResponse},
     };
-    use super::super::super::rocket;
-    use rocket::{http::ContentType, local::asynchronous::Client};
+    use mongodb::bson::oid::ObjectId;
     use rocket::http::Status;
+    use rocket::{http::ContentType, local::asynchronous::Client};
 
     #[rocket::async_test]
     async fn should_get_user() {
@@ -80,7 +70,7 @@ mod test {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
-            last_name: "Doe".to_string()
+            last_name: "Doe".to_string(),
         };
         db.save_user(&user).await;
         let client = Client::tracked(rocket().await).await.unwrap();
@@ -90,9 +80,8 @@ mod test {
 
         assert_eq!(response.status(), Status::Ok);
         let response_json = response.into_string().await.unwrap();
-        let get_user_response: GetUserResponse = serde_json::
-            from_str(response_json.as_str())
-            .unwrap();
+        let get_user_response: GetUserResponse =
+            serde_json::from_str(response_json.as_str()).unwrap();
         assert_eq!(get_user_response.id, user._id.to_string());
         assert_eq!(get_user_response.email, user.email);
     }
@@ -104,13 +93,13 @@ mod test {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
-            last_name: "Doe".to_string()
+            last_name: "Doe".to_string(),
         };
         let user2 = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
-            last_name: "Doe".to_string()
+            last_name: "Doe".to_string(),
         };
         db.save_user(&user1).await;
         db.save_user(&user2).await;
@@ -121,9 +110,7 @@ mod test {
 
         assert_eq!(response.status(), Status::Ok);
         let response_json = response.into_string().await.unwrap();
-        let response: Vec<GetUserResponse> = serde_json::
-            from_str(response_json.as_str())
-            .unwrap();
+        let response: Vec<GetUserResponse> = serde_json::from_str(response_json.as_str()).unwrap();
         assert!(response[0].id.len() > 0);
         assert!(response[1].id.len() > 0);
     }
@@ -145,9 +132,8 @@ mod test {
             .dispatch()
             .await;
         let response_json = response.into_string().await.unwrap();
-        let create_user_response: CreateUserResponse = serde_json::
-            from_str(response_json.as_str())
-            .unwrap();
+        let create_user_response: CreateUserResponse =
+            serde_json::from_str(response_json.as_str()).unwrap();
 
         assert_eq!(create_user_response.id.len() > 0, true);
     }
@@ -159,7 +145,8 @@ mod test {
         let response = client
             .get("/health")
             .header(ContentType::Text)
-            .dispatch().await;
+            .dispatch()
+            .await;
         let response_string = response.into_string().await.unwrap();
 
         assert_eq!(response_string, "Health OK")
@@ -169,15 +156,9 @@ mod test {
     async fn should_check_root_route() {
         let client = Client::tracked(rocket().await).await.unwrap();
 
-        let response = client
-            .get("/")
-            .header(ContentType::Text)
-            .dispatch().await;
+        let response = client.get("/").header(ContentType::Text).dispatch().await;
         let response_string = response.into_string().await.unwrap();
 
-        assert!(
-            response_string
-            .contains("<h1>Welcome to Rust API Example</h1>")
-        )
+        assert!(response_string.contains("<h1>Welcome to Rust API Example</h1>"))
     }
 }

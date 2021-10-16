@@ -1,14 +1,15 @@
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
 mod app;
 
-use app::routes as app_routes;
 use app::db::Database;
-use rocket::Rocket;
+use app::routes as app_routes;
 use rocket::Build;
+use rocket::Rocket;
 use rocket_dyn_templates::Template;
 
-#[rocket::main] 
+#[rocket::main]
 async fn main() {
     rocket().await.launch().await.unwrap()
 }
@@ -26,7 +27,7 @@ async fn rocket() -> Rocket<Build> {
                 app_routes::create_user,
                 app_routes::health_check,
                 app_routes::root
-            ]
+            ],
         )
         .manage(db)
 }

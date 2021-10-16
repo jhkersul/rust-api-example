@@ -1,9 +1,9 @@
-use serde::{Serialize, Deserialize};
 use super::domain::User;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateUserResponse {
-    pub id: String
+    pub id: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -11,7 +11,7 @@ pub struct GetUserResponse {
     pub id: String,
     pub email: String,
     pub first_name: String,
-    pub last_name: String
+    pub last_name: String,
 }
 
 impl GetUserResponse {
@@ -24,4 +24,3 @@ impl GetUserResponse {
         }
     }
 }
-
