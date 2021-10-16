@@ -1,11 +1,17 @@
 use mongodb::bson::oid::ObjectId;
 use rocket::State;
 use rocket::serde::json::Json;
-use super::{db::Database, request::CreateUserRequest, response::{CreateUserResponse, GetUserResponse}};
+use super::{
+    db::Database,
+    request::CreateUserRequest,
+    response::{CreateUserResponse, GetUserResponse}
+};
 use rocket_dyn_templates::Template;
 
 #[get("/users/<id>")]
-pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse> {
+pub async fn get_user(
+    id: String, db: &State<Database>
+) -> Json<GetUserResponse> {
     let object_id = ObjectId::parse_str(&id).unwrap();
 
     return match db.get_user(object_id).await {
@@ -16,7 +22,9 @@ pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse>
 }
 
 #[get("/users")]
-pub async fn get_users(db: &State<Database>) -> Json<Vec<GetUserResponse>> {
+pub async fn get_users(
+    db: &State<Database>
+) -> Json<Vec<GetUserResponse>> {
     let users = db.get_users(10).await;
     let response = users
         .into_iter()
@@ -25,7 +33,11 @@ pub async fn get_users(db: &State<Database>) -> Json<Vec<GetUserResponse>> {
     Json(response)
 }
 
-#[post("/users", format = "application/json", data = "<create_user_request>")]
+#[post(
+    "/users",
+    format = "application/json",
+    data = "<create_user_request>"
+)]
 pub async fn create_user(
     create_user_request: Json<CreateUserRequest>,
     db: &State<Database>
@@ -52,7 +64,11 @@ pub async fn root() -> Template {
 #[cfg(test)]
 mod test {
     use mongodb::bson::oid::ObjectId;
-    use crate::app::{db::Database, domain::User, response::{CreateUserResponse, GetUserResponse}};
+    use crate::app::{
+        db::Database,
+        domain::User,
+        response::{CreateUserResponse, GetUserResponse}
+    };
     use super::super::super::rocket;
     use rocket::{http::ContentType, local::asynchronous::Client};
     use rocket::http::Status;
@@ -74,7 +90,9 @@ mod test {
 
         assert_eq!(response.status(), Status::Ok);
         let response_json = response.into_string().await.unwrap();
-        let get_user_response: GetUserResponse = serde_json::from_str(response_json.as_str()).unwrap();
+        let get_user_response: GetUserResponse = serde_json::
+            from_str(response_json.as_str())
+            .unwrap();
         assert_eq!(get_user_response.id, user._id.to_string());
         assert_eq!(get_user_response.email, user.email);
     }
@@ -103,7 +121,9 @@ mod test {
 
         assert_eq!(response.status(), Status::Ok);
         let response_json = response.into_string().await.unwrap();
-        let response: Vec<GetUserResponse> = serde_json::from_str(response_json.as_str()).unwrap();
+        let response: Vec<GetUserResponse> = serde_json::
+            from_str(response_json.as_str())
+            .unwrap();
         assert!(response[0].id.len() > 0);
         assert!(response[1].id.len() > 0);
     }
@@ -117,10 +137,17 @@ mod test {
                 "first_name": "John",
                 "last_name": "Doe"
             }"#;
-        
-        let response = client.post("/users").body(json_body).header(ContentType::JSON).dispatch().await;
+
+        let response = client
+            .post("/users")
+            .body(json_body)
+            .header(ContentType::JSON)
+            .dispatch()
+            .await;
         let response_json = response.into_string().await.unwrap();
-        let create_user_response: CreateUserResponse = serde_json::from_str(response_json.as_str()).unwrap();
+        let create_user_response: CreateUserResponse = serde_json::
+            from_str(response_json.as_str())
+            .unwrap();
 
         assert_eq!(create_user_response.id.len() > 0, true);
     }
@@ -148,6 +175,9 @@ mod test {
             .dispatch().await;
         let response_string = response.into_string().await.unwrap();
 
-        assert!(response_string.contains("<h1>Welcome to Rust API Example</h1>"))
+        assert!(
+            response_string
+            .contains("<h1>Welcome to Rust API Example</h1>")
+        )
     }
 }

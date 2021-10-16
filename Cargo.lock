@@ -1572,7 +1572,7 @@ dependencies = [
 
 [[package]]
 name = "rust-api-example"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "mongodb",
  "rocket",
