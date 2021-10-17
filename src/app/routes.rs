@@ -65,7 +65,7 @@ mod test {
 
     #[rocket::async_test]
     async fn should_get_user() {
-        let db = Database::init().await;
+        let db = Database::new().await;
         let user = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
@@ -88,7 +88,7 @@ mod test {
 
     #[rocket::async_test]
     async fn should_get_users() {
-        let db = Database::init().await;
+        let db = Database::new().await;
         let user1 = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),

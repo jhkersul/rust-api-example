@@ -15,7 +15,7 @@ async fn main() {
 }
 
 async fn rocket() -> Rocket<Build> {
-    let db = Database::init().await;
+    let db = Database::new().await;
 
     rocket::build()
         .attach(Template::fairing())

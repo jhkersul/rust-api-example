@@ -12,7 +12,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn init() -> Self {
+    pub async fn new() -> Database {
         let mut client_options = ClientOptions::parse(DATABASE_URL).await.unwrap();
         client_options.app_name = Some(APP_NAME.to_string());
 
