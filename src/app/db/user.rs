@@ -3,6 +3,7 @@ use mongodb::{
     bson::{doc, oid::ObjectId},
     options::FindOptions,
     results::InsertOneResult,
+    Collection,
 };
 use rocket::futures::stream::TryStreamExt;
 
@@ -27,7 +28,7 @@ impl Database {
         let filter = doc! { "_id": id };
 
         match &self.users_collection().find_one(filter, None).await {
-            Ok(user) => self.remove_ref_user(user),
+            Ok(user) => user.clone(),
             Err(error) => panic!("{}", error),
         }
     }
@@ -40,6 +41,10 @@ impl Database {
             Ok(cursor) => cursor.try_collect().await.unwrap_or_else(|_| vec![]),
             Err(error) => panic!("{}", error),
         }
+    }
+
+    pub fn users_collection(&self) -> Collection<User> {
+        self.database().collection("users")
     }
 }
 

@@ -1,5 +1,4 @@
-use super::domain::User;
-use mongodb::{options::ClientOptions, Client, Collection, Database as MongoDatabase};
+use mongodb::{options::ClientOptions, Client, Database as MongoDatabase};
 
 const DATABASE_URL: &str = "mongodb://root:root@localhost:27017";
 const APP_NAME: &str = "rust-api-example";
@@ -21,15 +20,7 @@ impl Database {
         }
     }
 
-    pub fn users_collection(&self) -> Collection<User> {
-        self.database().collection("users")
-    }
-
     fn database(&self) -> MongoDatabase {
         self.client.database(DATABASE_NAME)
-    }
-
-    fn remove_ref_user(&self, user: &Option<User>) -> Option<User> {
-        user.as_ref().cloned()
     }
 }
