@@ -23,7 +23,7 @@ impl UsersRepository {
         Self { database }
     }
 
-    pub async fn save_user(&self, user: &User) -> ObjectId {
+    pub async fn save(&self, user: &User) -> ObjectId {
         let id = match &self.users_collection().await.insert_one(user, None).await {
             Ok(result) => get_id(result),
             Err(error) => panic!("{}", error),
@@ -32,7 +32,7 @@ impl UsersRepository {
         id
     }
 
-    pub async fn get_user(&self, id: ObjectId) -> Option<User> {
+    pub async fn find_by_id(&self, id: ObjectId) -> Option<User> {
         let filter = doc! { "_id": id };
 
         match &self.users_collection().await.find_one(filter, None).await {
@@ -41,7 +41,7 @@ impl UsersRepository {
         }
     }
 
-    pub async fn get_users(&self, limit: i64) -> Vec<User> {
+    pub async fn find_all(&self, limit: i64) -> Vec<User> {
         let find_options = FindOptions::builder().limit(limit).build();
         let find = self
             .users_collection()
@@ -74,12 +74,11 @@ mod test {
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
         };
-        let db = Database::new().await;
-        let users_repo = UsersRepository::new(db);
+        let users_repo = UsersRepository::new(Database::new().await);
 
-        let saved_id = users_repo.save_user(&user).await;
+        let saved_id = users_repo.save(&user).await;
 
-        match users_repo.get_user(saved_id).await {
+        match users_repo.find_by_id(saved_id).await {
             Some(saved_user) => {
                 assert_eq!(user._id, saved_user._id);
                 assert_eq!(user.email, saved_user.email);

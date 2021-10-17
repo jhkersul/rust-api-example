@@ -11,7 +11,7 @@ use rocket_dyn_templates::Template;
 pub async fn get_user(id: String, users_repo: &State<UsersRepository>) -> Json<GetUserResponse> {
     let object_id = ObjectId::parse_str(&id).unwrap();
 
-    return match users_repo.get_user(object_id).await {
+    return match users_repo.find_by_id(object_id).await {
         Some(user) => Json(GetUserResponse::from_domain(&user)),
         None => panic!("User not found"),
     };
@@ -19,7 +19,7 @@ pub async fn get_user(id: String, users_repo: &State<UsersRepository>) -> Json<G
 
 #[get("/users")]
 pub async fn get_users(users_repo: &State<UsersRepository>) -> Json<Vec<GetUserResponse>> {
-    let users = users_repo.get_users(10).await;
+    let users = users_repo.find_all(10).await;
     let response = users
         .into_iter()
         .map(|user| GetUserResponse::from_domain(&user))
@@ -33,7 +33,7 @@ pub async fn create_user(
     users_repo: &State<UsersRepository>,
 ) -> Json<CreateUserResponse> {
     let user = create_user_request.to_domain();
-    let user_id = users_repo.save_user(&user).await;
+    let user_id = users_repo.save(&user).await;
 
     Json(CreateUserResponse {
         id: user_id.to_string(),
@@ -71,7 +71,7 @@ mod test {
             last_name: "Doe".to_string(),
         };
         let users_repo = UsersRepository::new(Database::new().await);
-        users_repo.save_user(&user).await;
+        users_repo.save(&user).await;
         let client = Client::tracked(rocket().await).await.unwrap();
         let path = format!("/users/{}", user._id.to_string());
 
@@ -100,8 +100,8 @@ mod test {
             last_name: "Doe".to_string(),
         };
         let users_repo = UsersRepository::new(Database::new().await);
-        users_repo.save_user(&user1).await;
-        users_repo.save_user(&user2).await;
+        users_repo.save(&user1).await;
+        users_repo.save(&user2).await;
         let client = Client::tracked(rocket().await).await.unwrap();
         let path = "/users";
 
