@@ -14,7 +14,17 @@ fn get_id(result: &InsertOneResult) -> ObjectId {
     }
 }
 
-impl Database {
+pub struct UsersRepository {
+    database: Database,
+}
+
+impl UsersRepository {
+    pub async fn new() -> Self {
+        Self {
+            database: Database::new().await,
+        }
+    }
+
     pub async fn save_user(&self, user: &User) -> ObjectId {
         let id = match &self.users_collection().insert_one(user, None).await {
             Ok(result) => get_id(result),
@@ -44,19 +54,19 @@ impl Database {
     }
 
     pub fn users_collection(&self) -> Collection<User> {
-        self.database().collection("users")
+        self.database.collection("users")
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::Database;
+    use super::UsersRepository;
     use crate::app::domain::User;
     use mongodb::bson::oid::ObjectId;
 
     #[rocket::async_test]
     async fn should_create_user() {
-        let db = Database::new().await;
+        let repository = UsersRepository::new().await;
         let user = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
@@ -64,9 +74,9 @@ mod test {
             last_name: "Doe".to_string(),
         };
 
-        let saved_id = db.save_user(&user).await;
+        let saved_id = repository.save_user(&user).await;
 
-        match db.get_user(saved_id).await {
+        match repository.get_user(saved_id).await {
             Some(saved_user) => {
                 assert_eq!(user._id, saved_user._id);
                 assert_eq!(user.email, saved_user.email);

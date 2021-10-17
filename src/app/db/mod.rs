@@ -1,10 +1,10 @@
-use mongodb::{options::ClientOptions, Client, Database as MongoDatabase};
+use mongodb::{options::ClientOptions, Client, Collection};
 
 const DATABASE_URL: &str = "mongodb://root:root@localhost:27017";
 const APP_NAME: &str = "rust-api-example";
 const DATABASE_NAME: &str = "rust-api-example";
 
-mod user;
+pub mod user;
 
 pub struct Database {
     client: Client,
@@ -20,7 +20,7 @@ impl Database {
         }
     }
 
-    fn database(&self) -> MongoDatabase {
-        self.client.database(DATABASE_NAME)
+    fn collection<T>(&self, name: &str) -> Collection<T> {
+        self.client.database(DATABASE_NAME).collection(name)
     }
 }
