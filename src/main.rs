@@ -3,7 +3,8 @@ extern crate rocket;
 
 mod app;
 
-use app::db::Database;
+use crate::app::db::user::UsersRepository;
+use crate::app::db::Database;
 use app::routes as app_routes;
 use rocket::Build;
 use rocket::Rocket;
@@ -16,6 +17,7 @@ async fn main() {
 
 async fn rocket() -> Rocket<Build> {
     let db = Database::new().await;
+    let users_repo = UsersRepository::new(db);
 
     rocket::build()
         .attach(Template::fairing())
@@ -29,5 +31,5 @@ async fn rocket() -> Rocket<Build> {
                 app_routes::root
             ],
         )
-        .manage(db)
+        .manage(users_repo)
 }

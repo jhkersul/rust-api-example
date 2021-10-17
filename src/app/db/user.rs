@@ -14,9 +14,17 @@ fn get_id(result: &InsertOneResult) -> ObjectId {
     }
 }
 
-impl Database {
-    pub async fn save_user(&self, user: &User) -> ObjectId {
-        let id = match &self.users_collection().insert_one(user, None).await {
+pub struct UsersRepository {
+    database: Database,
+}
+
+impl UsersRepository {
+    pub fn new(database: Database) -> Self {
+        Self { database }
+    }
+
+    pub async fn save(&self, user: &User) -> ObjectId {
+        let id = match &self.users_collection().await.insert_one(user, None).await {
             Ok(result) => get_id(result),
             Err(error) => panic!("{}", error),
         };
@@ -24,18 +32,22 @@ impl Database {
         id
     }
 
-    pub async fn get_user(&self, id: ObjectId) -> Option<User> {
+    pub async fn find_by_id(&self, id: ObjectId) -> Option<User> {
         let filter = doc! { "_id": id };
 
-        match &self.users_collection().find_one(filter, None).await {
+        match &self.users_collection().await.find_one(filter, None).await {
             Ok(user) => user.clone(),
             Err(error) => panic!("{}", error),
         }
     }
 
-    pub async fn get_users(&self, limit: i64) -> Vec<User> {
+    pub async fn find_all(&self, limit: i64) -> Vec<User> {
         let find_options = FindOptions::builder().limit(limit).build();
-        let find = self.users_collection().find(doc! {}, find_options).await;
+        let find = self
+            .users_collection()
+            .await
+            .find(doc! {}, find_options)
+            .await;
 
         match find {
             Ok(cursor) => cursor.try_collect().await.unwrap_or_else(|_| vec![]),
@@ -43,30 +55,30 @@ impl Database {
         }
     }
 
-    pub fn users_collection(&self) -> Collection<User> {
-        self.database().collection("users")
+    pub async fn users_collection(&self) -> Collection<User> {
+        self.database.collection("users")
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::Database;
-    use crate::app::domain::User;
+    use super::UsersRepository;
+    use crate::app::{db::Database, domain::User};
     use mongodb::bson::oid::ObjectId;
 
     #[rocket::async_test]
     async fn should_create_user() {
-        let db = Database::new().await;
         let user = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
         };
+        let users_repo = UsersRepository::new(Database::new().await);
 
-        let saved_id = db.save_user(&user).await;
+        let saved_id = users_repo.save(&user).await;
 
-        match db.get_user(saved_id).await {
+        match users_repo.find_by_id(saved_id).await {
             Some(saved_user) => {
                 assert_eq!(user._id, saved_user._id);
                 assert_eq!(user.email, saved_user.email);

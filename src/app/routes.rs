@@ -1,26 +1,25 @@
 use super::{
-    db::Database,
+    db::user::UsersRepository,
     request::CreateUserRequest,
     response::{CreateUserResponse, GetUserResponse},
 };
 use mongodb::bson::oid::ObjectId;
-use rocket::serde::json::Json;
-use rocket::State;
+use rocket::{serde::json::Json, State};
 use rocket_dyn_templates::Template;
 
 #[get("/users/<id>")]
-pub async fn get_user(id: String, db: &State<Database>) -> Json<GetUserResponse> {
+pub async fn get_user(id: String, users_repo: &State<UsersRepository>) -> Json<GetUserResponse> {
     let object_id = ObjectId::parse_str(&id).unwrap();
 
-    return match db.get_user(object_id).await {
+    return match users_repo.find_by_id(object_id).await {
         Some(user) => Json(GetUserResponse::from_domain(&user)),
         None => panic!("User not found"),
     };
 }
 
 #[get("/users")]
-pub async fn get_users(db: &State<Database>) -> Json<Vec<GetUserResponse>> {
-    let users = db.get_users(10).await;
+pub async fn get_users(users_repo: &State<UsersRepository>) -> Json<Vec<GetUserResponse>> {
+    let users = users_repo.find_all(10).await;
     let response = users
         .into_iter()
         .map(|user| GetUserResponse::from_domain(&user))
@@ -31,10 +30,10 @@ pub async fn get_users(db: &State<Database>) -> Json<Vec<GetUserResponse>> {
 #[post("/users", format = "application/json", data = "<create_user_request>")]
 pub async fn create_user(
     create_user_request: Json<CreateUserRequest>,
-    db: &State<Database>,
+    users_repo: &State<UsersRepository>,
 ) -> Json<CreateUserResponse> {
     let user = create_user_request.to_domain();
-    let user_id = db.save_user(&user).await;
+    let user_id = users_repo.save(&user).await;
 
     Json(CreateUserResponse {
         id: user_id.to_string(),
@@ -55,7 +54,7 @@ pub async fn root() -> Template {
 mod test {
     use super::super::super::rocket;
     use crate::app::{
-        db::Database,
+        db::{user::UsersRepository, Database},
         domain::User,
         response::{CreateUserResponse, GetUserResponse},
     };
@@ -65,14 +64,14 @@ mod test {
 
     #[rocket::async_test]
     async fn should_get_user() {
-        let db = Database::new().await;
         let user = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
         };
-        db.save_user(&user).await;
+        let users_repo = UsersRepository::new(Database::new().await);
+        users_repo.save(&user).await;
         let client = Client::tracked(rocket().await).await.unwrap();
         let path = format!("/users/{}", user._id.to_string());
 
@@ -88,7 +87,6 @@ mod test {
 
     #[rocket::async_test]
     async fn should_get_users() {
-        let db = Database::new().await;
         let user1 = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
@@ -101,8 +99,9 @@ mod test {
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
         };
-        db.save_user(&user1).await;
-        db.save_user(&user2).await;
+        let users_repo = UsersRepository::new(Database::new().await);
+        users_repo.save(&user1).await;
+        users_repo.save(&user2).await;
         let client = Client::tracked(rocket().await).await.unwrap();
         let path = "/users";
 
@@ -111,8 +110,8 @@ mod test {
         assert_eq!(response.status(), Status::Ok);
         let response_json = response.into_string().await.unwrap();
         let response: Vec<GetUserResponse> = serde_json::from_str(response_json.as_str()).unwrap();
-        assert!(response[0].id.len() > 0);
-        assert!(response[1].id.len() > 0);
+        assert!(!response[0].id.is_empty());
+        assert!(!response[1].id.is_empty());
     }
 
     #[rocket::async_test]
@@ -135,7 +134,7 @@ mod test {
         let create_user_response: CreateUserResponse =
             serde_json::from_str(response_json.as_str()).unwrap();
 
-        assert_eq!(create_user_response.id.len() > 0, true);
+        assert!(!create_user_response.id.is_empty());
     }
 
     #[rocket::async_test]

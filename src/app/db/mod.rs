@@ -1,10 +1,10 @@
-use mongodb::{options::ClientOptions, Client, Database as MongoDatabase};
+use mongodb::{options::ClientOptions, Client, Collection};
 
 const DATABASE_URL: &str = "mongodb://root:root@localhost:27017";
 const APP_NAME: &str = "rust-api-example";
 const DATABASE_NAME: &str = "rust-api-example";
 
-mod user;
+pub mod user;
 
 pub struct Database {
     client: Client,
@@ -12,15 +12,19 @@ pub struct Database {
 
 impl Database {
     pub async fn new() -> Database {
-        let mut client_options = ClientOptions::parse(DATABASE_URL).await.unwrap();
-        client_options.app_name = Some(APP_NAME.to_string());
+        let client = client().await;
 
-        Self {
-            client: Client::with_options(client_options).unwrap(),
-        }
+        Self { client }
     }
 
-    fn database(&self) -> MongoDatabase {
-        self.client.database(DATABASE_NAME)
+    fn collection<T>(&self, name: &str) -> Collection<T> {
+        self.client.database(DATABASE_NAME).collection(name)
     }
+}
+
+async fn client() -> Client {
+    let mut client_options = ClientOptions::parse(DATABASE_URL).await.unwrap();
+    client_options.app_name = Some(APP_NAME.to_string());
+
+    Client::with_options(client_options).unwrap()
 }
