@@ -12,7 +12,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v2-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
+            - v1-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
       - run:
           name: Rust Up Stable
           command: "rustup default stable"
@@ -34,4 +34,4 @@ jobs:
             - target/debug/.fingerprint
             - target/debug/build
             - target/debug/deps
-          key: v2-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
+          key: v1-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
