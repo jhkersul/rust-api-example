@@ -4,12 +4,11 @@ use super::{
     response::{CreateUserResponse, GetUserResponse},
 };
 use mongodb::bson::oid::ObjectId;
-use rocket::serde::json::Json;
+use rocket::{serde::json::Json, State};
 use rocket_dyn_templates::Template;
 
 #[get("/users/<id>")]
-pub async fn get_user(id: String) -> Json<GetUserResponse> {
-    let users_repo = UsersRepository::new().await;
+pub async fn get_user(id: String, users_repo: &State<UsersRepository>) -> Json<GetUserResponse> {
     let object_id = ObjectId::parse_str(&id).unwrap();
 
     return match users_repo.get_user(object_id).await {
@@ -19,8 +18,7 @@ pub async fn get_user(id: String) -> Json<GetUserResponse> {
 }
 
 #[get("/users")]
-pub async fn get_users() -> Json<Vec<GetUserResponse>> {
-    let users_repo = UsersRepository::new().await;
+pub async fn get_users(users_repo: &State<UsersRepository>) -> Json<Vec<GetUserResponse>> {
     let users = users_repo.get_users(10).await;
     let response = users
         .into_iter()
@@ -30,8 +28,10 @@ pub async fn get_users() -> Json<Vec<GetUserResponse>> {
 }
 
 #[post("/users", format = "application/json", data = "<create_user_request>")]
-pub async fn create_user(create_user_request: Json<CreateUserRequest>) -> Json<CreateUserResponse> {
-    let users_repo = UsersRepository::new().await;
+pub async fn create_user(
+    create_user_request: Json<CreateUserRequest>,
+    users_repo: &State<UsersRepository>,
+) -> Json<CreateUserResponse> {
     let user = create_user_request.to_domain();
     let user_id = users_repo.save_user(&user).await;
 
@@ -54,7 +54,7 @@ pub async fn root() -> Template {
 mod test {
     use super::super::super::rocket;
     use crate::app::{
-        db::user::UsersRepository,
+        db::{user::UsersRepository, Database},
         domain::User,
         response::{CreateUserResponse, GetUserResponse},
     };
@@ -64,13 +64,13 @@ mod test {
 
     #[rocket::async_test]
     async fn should_get_user() {
-        let users_repo = UsersRepository::new().await;
         let user = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
         };
+        let users_repo = UsersRepository::new(Database::new().await);
         users_repo.save_user(&user).await;
         let client = Client::tracked(rocket().await).await.unwrap();
         let path = format!("/users/{}", user._id.to_string());
@@ -87,7 +87,6 @@ mod test {
 
     #[rocket::async_test]
     async fn should_get_users() {
-        let users_repo = UsersRepository::new().await;
         let user1 = User {
             _id: ObjectId::new(),
             email: "test@test.com".to_string(),
@@ -100,6 +99,7 @@ mod test {
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
         };
+        let users_repo = UsersRepository::new(Database::new().await);
         users_repo.save_user(&user1).await;
         users_repo.save_user(&user2).await;
         let client = Client::tracked(rocket().await).await.unwrap();
