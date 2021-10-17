@@ -10,6 +10,9 @@ jobs:
             MONGO_INITDB_ROOT_PASSWORD: root
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - v2-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
       - run:
           name: Rust Up Stable
           command: "rustup default stable"
@@ -25,3 +28,10 @@ jobs:
       - run:
           name: Run Tests
           command: "cargo test"
+      - save_cache:
+          paths:
+            - ~/.cargo
+            - target/debug/.fingerprint
+            - target/debug/build
+            - target/debug/deps
+          key: v2-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
