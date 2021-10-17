@@ -1,5 +1,4 @@
-use super::super::domain::User;
-use super::Database;
+use super::{super::domain::User, Database};
 use mongodb::{
     bson::{doc, oid::ObjectId},
     options::FindOptions,
