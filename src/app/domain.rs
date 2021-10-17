@@ -9,8 +9,8 @@ pub struct User {
     pub last_name: String,
 }
 
-impl User {
-    pub(crate) fn clone(&self) -> User {
+impl Clone for User {
+    fn clone(&self) -> User {
         User {
             _id: self._id,
             email: self.email.clone(),

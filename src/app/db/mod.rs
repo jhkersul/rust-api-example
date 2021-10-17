@@ -30,6 +30,6 @@ impl Database {
     }
 
     fn remove_ref_user(&self, user: &Option<User>) -> Option<User> {
-        user.as_ref().map(|u| u.clone())
+        user.as_ref().cloned()
     }
 }
