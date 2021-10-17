@@ -46,7 +46,7 @@ impl Database {
 #[cfg(test)]
 mod test {
     use super::Database;
-    use super::User;
+    use crate::app::domain::User;
     use mongodb::bson::oid::ObjectId;
 
     #[rocket::async_test]
